@@ -1,0 +1,162 @@
+<!-- <link rel="stylesheet" type="text/css" href="css/visitor.css?v=20190608"/> -->
+<style type="text/css">
+	#visitorList tr td img{
+	    width: 45px;
+	    height: 45px;
+	    border-radius: 22.5px;
+	    margin-right: 15px;
+	    cursor: pointer;
+	}
+	
+	.visitorLoadNext{
+		width: 280px;
+		height: 50px;
+		line-height: 50px;
+		background-color: #29e;
+		color: #fff;
+		text-align: center;
+		border: none;
+		border-radius: 40px;
+		outline: none;
+		margin: 2.5%;
+		display: none;
+	}
+	#visitorList{border: none;}
+	#visitorList thead{
+	    display: none!important;
+	}
+	#visitorList tbody tr {
+	    margin-top: 10px;
+	    display: block;
+	    cursor:pointer
+	}
+	#visitorList tbody tr td {
+	    display: block;
+	    border: 1px solid #ddd;
+	}
+	#visitorList tr td div > .vcontent p {
+	    line-height: 20px;
+	    margin-bottom: 10px;
+	}
+	#visitorList tr td div > div p{
+	    margin: 0;
+	    text-align: left;
+	}
+	
+	#visitorList tr td div > .vcontent
+	{
+	    margin-top:0
+	}
+	.personInfo{
+		margin-top: 10px;
+	    display: flex;
+	}
+	.lyData{
+	
+	}
+	.allVisitorDiv{
+	    margin-top:10px
+	}
+</style>
+<div class="allVisitorDiv clearfix">
+    <table id="visitorList">
+        <thead>
+            <tr>
+                <th data-field="iphoto">    </th>
+                <!-- <th data-field="option"></th> -->
+            </tr>
+        </thead>
+    </table>
+    <br/>
+    <p class="clearfix">
+        <span class="visitorLoadNext pull-right">下一页</span>
+    </p>
+</div>
+<script type="text/javascript" >
+    // 加载全部访客
+    var visitorPage;
+    var arr_visitor = [];
+    loadVisitorFirst(0)
+    function loadVisitorFirst(page) {
+        arr_visitor = []
+        $.post(http_head + 'Makerspacey/MakerVisitor/Get_MakerVisitor.ashx', {
+            "makerGuid": userGuid,
+            "page": page
+        }, function(data) {
+            var dataVisitor = JSON.parse(data);
+			console.log(dataVisitor)
+            for (var i = 0; i < dataVisitor.items.length; i++) {
+                arr_visitor.push(dataVisitor.items[i])
+            }
+            if (arr_visitor.length > 0) {
+                loadVisitorTable(arr_visitor);
+                $("#visitorList").bootstrapTable('load', arr_visitor);
+            } else {}
+            visitorPage = dataVisitor.page;
+            if (dataVisitor.items.length > 9) {
+                $('.visitorLoadNext').fadeIn()
+            } else {
+                $('.visitorLoadNext').hide()
+            }
+        });
+    };
+
+    function loadVisitorNext(page) {
+        arr_visitor = []
+        $.post(http_head + 'Makerspacey/MakerVisitor/Get_MakerVisitor.ashx', {
+            "makerGuid": userGuid,
+            "page": page
+        }, function(data) {
+            var dataVisitor = JSON.parse(data);
+            for (var i = 0; i < dataVisitor.items.length; i++) {
+                arr_visitor.push(dataVisitor.items[i])
+            }
+            if (arr_visitor.length > 0) {
+                layer.msg("加载完成", {
+                    time: 1200
+                });
+                loadVisitorTable(arr_visitor);
+                $("#visitorList").bootstrapTable('append', arr_visitor);
+            } else {
+                layer.msg("已无更多", {
+                    time: 1200
+                })
+            }
+            visitorPage = dataVisitor.page;
+            if (dataVisitor.items.length > 9) {
+                $('.visitorLoadNext').fadeIn()
+            } else {
+                $('.visitorLoadNext').hide()
+            }
+        });
+    };
+    $('.visitorLoadNext').click(function() {
+        loadVisitorNext(visitorPage)
+    });
+    // 访客全部表格
+    function loadVisitorTable(data) {
+        $('#visitorList').bootstrapTable({
+            data: data,
+            columns: [{
+                field: 'iphoto',
+                align: 'center',
+                valign: 'middle',
+                formatter: imgVisotorFormatter,
+                events: optionVisitorEvents
+            }]
+        });
+
+        function imgVisotorFormatter(e, value, row, index) {
+            var time1 = value.createTime.split("T")[0];
+            var time2 = value.createTime.split("T")[1];
+            var time3 = time2.split(".")[0];
+            var time4 = time1 + "  " + time3
+            return '<div class="vck" title="点击访问ta的创客空间"> <div class="vcontent" ><p>' + time4 + '</p></div>  <div class="personInfo clearfix"><img src="' + value.iphoto.split("http://47.94.173.253:8008")[1] + '" alt="" class="pull-left photo"/> <div class="lyData"> <p class="personName">' + value.staffName + '</p><p><span>' + value.departName + '</span>  <span>' + value.postName + '</span></p><p><span>' + value.useroption + '</span></p></div></div></div>';
+        };
+    }
+    window.optionVisitorEvents = {
+        'click .vck': function (e, value, row, index) {
+            window.open("http://www.eqidd.com/changke/index_start.html?userGuid=" + row.creater)
+        }
+    }
+</script>
